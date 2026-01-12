@@ -47,6 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     # Only run deploy if manually triggered (not on every build test)
     if: github.event_name == 'workflow_dispatch'
+    permissions:
+      id-token: write   # Required for OIDC
+      contents: read
     
     steps:
     - name: Checkout
@@ -57,12 +60,17 @@ jobs:
       with:
         name: lambda-package
 
-    - name: Configure AWS
+    - name: Configure AWS (OIDC)
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
         aws-region: ${{ env.AWS_REGION }}
+
+    - name: Verify AWS identity
+      run: aws sts get-caller-identity
+
+    - name: Validate CloudFormation template
+      run: aws cloudformation validate-template --template-body file://deployment/cloudformation/aws-lambda-automation.json
 
     - name: Upload to S3
       run: |
@@ -71,7 +79,7 @@ jobs:
     - name: Deploy CloudFormation
       run: |
         aws cloudformation deploy \
-          --template-file deployment/cloudformation/template.json \
+          --template-file deployment/cloudformation/aws-lambda-automation.json \
           --stack-name ${{ env.STACK_NAME }} \
           --parameter-overrides \
             InputBucket=${{ secrets.INPUT_BUCKET }} \
