@@ -2,12 +2,8 @@ name: Lambda Build & Deploy
 
 on:
   # Automatic deployment on push (uncomment when ready for production)
-  # push:
-  #   branches: [ main ]
-  #   paths:
-  #     - 'modules/**'
-  #     - 'mdftoparquet/**'
-  #     - 'deployment/**'
+  push:
+    branches: [ feature/initial-aws-deployment ]
   
   # Manual trigger for testing
   workflow_dispatch:
