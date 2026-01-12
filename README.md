@@ -1,5 +1,20 @@
 # CANedge MDF to Parquet Automation
 
+> **Fork Notice:** This is a fork of [CSS-Electronics/canedge-mdftoparquet-automation](https://github.com/CSS-Electronics/canedge-mdftoparquet-automation) with additional production-ready AWS Lambda deployment automation. The original repository provides cloud functions for multi-cloud platforms (AWS, Google Cloud, Azure), while this fork adds streamlined GitHub Actions workflows and CloudFormation templates specifically for AWS Lambda deployments.
+
+## What's Added in This Fork
+
+- **GitHub Actions Workflow** (`.github/workflows/lambda-automation.yml`) - Automated build and deployment pipeline
+- **CloudFormation Template** (`deployment/cloudformation/aws-lambda-automation.json`) - Infrastructure as Code for Lambda function
+- **OIDC Authentication** - Secure AWS deployment without storing access keys
+- **Deployment Documentation** (`deployment/README.md`) - Complete setup guide for AWS deployments
+
+See [deployment/README.md](deployment/README.md) for deployment instructions.
+
+---
+
+## Original Repository Description
+
 This repository contains cloud functions for automatically decoding CANedge MDF log files to Parquet files **locally**, as well as on **Amazon AWS**, **Google Cloud** and **Azure** platforms. These functions are triggered when new MDF files are uploaded to a cloud storage bucket, process them using DBC decoding, and store the results in Parquet format in an output bucket. Further, the repository includes code for performing backlog processing and Parquet data lake trip summary aggregation.
 
 > [!NOTE]  
