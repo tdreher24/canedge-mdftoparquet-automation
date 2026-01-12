@@ -1,0 +1,151 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CANedge MDF to Parquet Lambda Function",
+    "Parameters": {
+        "InputBucket": {
+            "Type": "String",
+            "Description": "S3 bucket containing MDF files"
+        },
+        "OutputBucket": {
+            "Type": "String",
+            "Description": "S3 bucket for Parquet output"
+        },
+        "LambdaCodeBucket": {
+            "Type": "String",
+            "Description": "S3 bucket containing Lambda deployment package"
+        },
+        "LambdaCodeKey": {
+            "Type": "String",
+            "Default": "mdftoparquet-lambda.zip",
+            "Description": "S3 key for Lambda deployment package"
+        }
+    },
+    "Resources": {
+        "MdfToParquetRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                ],
+                "Policies": [
+                    {
+                        "PolicyName": "S3Access",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": "arn:aws:s3:::${InputBucket}/*"
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": "arn:aws:s3:::${OutputBucket}/*"
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:ListBucket"
+                                    ],
+                                    "Resource": [
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${InputBucket}"
+                                        },
+                                        {
+                                            "Fn::Sub": "arn:aws:s3:::${OutputBucket}"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "MdfToParquetFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "canedge-mdf-to-parquet",
+                "Runtime": "python3.11",
+                "Handler": "lambda_function.lambda_handler",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "MdfToParquetRole",
+                        "Arn"
+                    ]
+                },
+                "Code": {
+                    "S3Bucket": {
+                        "Ref": "LambdaCodeBucket"
+                    },
+                    "S3Key": {
+                        "Ref": "LambdaCodeKey"
+                    }
+                },
+                "Timeout": 900,
+                "MemorySize": 2048,
+                "EphemeralStorage": {
+                    "Size": 2048
+                },
+                "Environment": {
+                    "Variables": {
+                        "OUTPUT_BUCKET": {
+                            "Ref": "OutputBucket"
+                        }
+                    }
+                }
+            }
+        },
+        "S3InvokePermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "MdfToParquetFunction"
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "s3.amazonaws.com",
+                "SourceArn": {
+                    "Fn::Sub": "arn:aws:s3:::${InputBucket}"
+                }
+            }
+        }
+    },
+    "Outputs": {
+        "FunctionArn": {
+            "Description": "Lambda Function ARN",
+            "Value": {
+                "Fn::GetAtt": [
+                    "MdfToParquetFunction",
+                    "Arn"
+                ]
+            }
+        },
+        "FunctionName": {
+            "Description": "Lambda Function Name",
+            "Value": {
+                "Ref": "MdfToParquetFunction"
+            }
+        }
+    }
+}

@@ -10,3 +10,9 @@ release/backlog-processor-local*
 release/mdf-to-parquet-*
 release/process_aggregation_amazon_entry-*
 release/process_backlog_amazon_entry-*
+
+.venv
+.vscode
+data
+data-parquet
+release
