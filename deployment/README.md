@@ -67,6 +67,8 @@ Configure these secrets in your GitHub repository (Settings → Secrets and vari
 
 ## Workflow Configuration
 
+> Test note: this file was updated to trigger a new GitHub Actions run after pushing the branch.
+
 Edit `.github/workflows/lambda-automation.yml` to configure:
 
 ```yaml
