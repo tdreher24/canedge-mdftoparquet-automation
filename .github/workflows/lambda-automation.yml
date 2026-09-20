@@ -25,10 +25,13 @@ jobs:
         mkdir -p lambda-build
         cp mdftoparquet/lambda_function.py lambda-build/
         cp mdf2parquet_decode lambda-build/
+        chmod +x lambda-build/mdf2parquet_decode
         cp -r modules lambda-build/
         find lambda-build -type d -name __pycache__ -exec rm -rf {} + || true
         cd lambda-build
         zip -r ../mdftoparquet-lambda.zip .
+        # pandas/pyarrow are NOT bundled here - they are provided via the AWSSDKPandas Lambda Layer
+        # attached in the CloudFormation template (too large to fit in the function zip).
 
     - name: Show package info
       run: |

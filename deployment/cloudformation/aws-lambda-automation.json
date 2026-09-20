@@ -18,6 +18,11 @@
             "Type": "String",
             "Default": "mdftoparquet-lambda.zip",
             "Description": "S3 key for Lambda deployment package"
+        },
+        "LambdaLayerArn": {
+            "Type": "String",
+            "Default": "arn:aws:lambda:eu-central-1:336392948345:layer:AWSSDKPandas-Python311:35",
+            "Description": "ARN of the Lambda Layer providing pandas/pyarrow (default: AWS-managed AWSSDKPandas layer for eu-central-1/Python 3.11/x86_64 - pick the ARN matching your region from https://aws-sdk-pandas.readthedocs.io/en/stable/layers.html, or supply your own layer)"
         }
     },
     "Resources": {
@@ -108,8 +113,16 @@
                 "EphemeralStorage": {
                     "Size": 2048
                 },
+                "Layers": [
+                    {
+                        "Ref": "LambdaLayerArn"
+                    }
+                ],
                 "Environment": {
                     "Variables": {
+                        "INPUT_BUCKET": {
+                            "Ref": "InputBucket"
+                        },
                         "OUTPUT_BUCKET": {
                             "Ref": "OutputBucket"
                         }

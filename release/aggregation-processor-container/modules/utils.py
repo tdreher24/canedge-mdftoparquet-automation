@@ -8,7 +8,7 @@ def clean_tmp(base, logger):
     valid_extensions = ('.MF4', '.MFC', '.MFE', '.MFM')
     
     try:
-        logger.info("Listing contents of {base} dir:")
+        logger.info(f"Listing contents of {base} dir:")
         logger.info(os.listdir(base))
         for name in os.listdir(base):
             p = os.path.join(base, name)

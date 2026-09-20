@@ -1,4 +1,4 @@
-def mdf_to_parquet(cloud, storage_client, notification_client, event, bucket_input, bucket_output):
+def  mdf_to_parquet(cloud, storage_client, notification_client, event, bucket_input, bucket_output):
     from pathlib import Path
     from .utils import DownloadObjects, DetectEvents, CreateCustomMessages, decode_log_file, clean_tmp
     from .functions import process_decoded_data
@@ -16,8 +16,10 @@ def mdf_to_parquet(cloud, storage_client, notification_client, event, bucket_inp
     if len(log_file_object_paths) == 0:
         return False 
     
-    # Clean up tmp directory
-    clean_tmp("/tmp", logger)
+    # Clean up tmp directory (skip on Windows if /tmp doesn't exist)
+    import platform
+    tmp_dir = "/tmp" if platform.system() != "Windows" else tempfile.gettempdir()
+    clean_tmp(tmp_dir, logger)
     
     with tempfile.TemporaryDirectory() as temp:       
         tmp_input_dir = Path(temp) / "input"
