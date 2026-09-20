@@ -1,0 +1,91 @@
+name: Lambda Build & Deploy
+
+on:
+  # Automatic deployment on push (uncomment when ready for production)
+  push:
+    branches: [ feature/initial-aws-deployment ]
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-central-1
+  STACK_NAME: canedge-mdf-to-parquet
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build Lambda package
+      run: |
+        mkdir -p lambda-build
+        cp mdftoparquet/lambda_function.py lambda-build/
+        cp mdf2parquet_decode lambda-build/
+        chmod +x lambda-build/mdf2parquet_decode
+        cp -r modules lambda-build/
+        find lambda-build -type d -name __pycache__ -exec rm -rf {} + || true
+        cd lambda-build
+        zip -r ../mdftoparquet-lambda.zip .
+        # pandas/pyarrow are NOT bundled here - they are provided via the AWSSDKPandas Lambda Layer
+        # attached in the CloudFormation template (too large to fit in the function zip).
+
+    - name: Show package info
+      run: |
+        ls -lh mdftoparquet-lambda.zip
+        unzip -l mdftoparquet-lambda.zip | head -20
+
+    - name: Upload artifact
+      if: ${{ !env.ACT }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: lambda-package
+        path: mdftoparquet-lambda.zip
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Only run deploy if manually triggered (not on every build test)
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      id-token: write   # Required for OIDC
+      contents: read
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: lambda-package
+
+    - name: Configure AWS (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Verify AWS identity
+      run: aws sts get-caller-identity
+
+    - name: Validate CloudFormation template
+      run: aws cloudformation validate-template --template-body file://deployment/cloudformation/aws-lambda-automation.json
+
+    - name: Upload to S3
+      run: |
+        aws s3 cp mdftoparquet-lambda.zip s3://${{ secrets.LAMBDA_CODE_BUCKET }}/
+
+    - name: Deploy CloudFormation
+      run: |
+        aws cloudformation deploy \
+          --template-file deployment/cloudformation/aws-lambda-automation.json \
+          --stack-name ${{ env.STACK_NAME }} \
+          --parameter-overrides \
+            InputBucket=${{ secrets.INPUT_BUCKET }} \
+            OutputBucket=${{ secrets.OUTPUT_BUCKET }} \
+            LambdaCodeBucket=${{ secrets.LAMBDA_CODE_BUCKET }} \
+          --capabilities CAPABILITY_IAM

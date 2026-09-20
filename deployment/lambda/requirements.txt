@@ -1,0 +1,6 @@
+# Reference only - NOT pip-installed into the deployment zip (too large).
+# These packages must be provided via the Lambda Layer configured in
+# deployment/cloudformation/aws-lambda-automation.json (e.g. AWS's managed
+# "AWSSDKPandas-Python311" layer, which bundles pandas, numpy and pyarrow).
+pyarrow>=10.0.0
+pandas>=2.0.0
