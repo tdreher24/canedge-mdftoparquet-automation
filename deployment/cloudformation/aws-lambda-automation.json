@@ -21,8 +21,8 @@
         },
         "LambdaLayerArn": {
             "Type": "String",
-            "Default": "arn:aws:lambda:eu-central-1:336392948345:layer:AWSSDKPandas-Python311:35",
-            "Description": "ARN of the Lambda Layer providing pandas/pyarrow (default: AWS-managed AWSSDKPandas layer for eu-central-1/Python 3.11/x86_64 - pick the ARN matching your region from https://aws-sdk-pandas.readthedocs.io/en/stable/layers.html, or supply your own layer)"
+            "Default": "arn:aws:lambda:eu-central-1:336392948345:layer:AWSSDKPandas-Python312:31",
+            "Description": "ARN of the Lambda Layer providing pandas/pyarrow (default: AWS-managed AWSSDKPandas layer for eu-central-1/Python 3.12/x86_64 - pick the ARN matching your region from https://aws-sdk-pandas.readthedocs.io/en/stable/layers.html, or supply your own layer)"
         }
     },
     "Resources": {
@@ -92,7 +92,7 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "FunctionName": "canedge-mdf-to-parquet",
-                "Runtime": "python3.11",
+                "Runtime": "python3.12",
                 "Handler": "lambda_function.lambda_handler",
                 "Role": {
                     "Fn::GetAtt": [

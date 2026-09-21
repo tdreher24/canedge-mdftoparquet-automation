@@ -107,7 +107,7 @@ act workflow_dispatch -j build
 
 The stack creates:
 - **Lambda Function** (`canedge-mdf-to-parquet`)
-  - Runtime: Python 3.11
+  - Runtime: Python 3.12
   - Memory: 2048 MB
   - Timeout: 900s (15 min)
   - Ephemeral Storage: 2048 MB
